@@ -133,7 +133,3 @@ class BuzztagView(APIView):
         }
         
         return Response(buzz_tag_data)
-        
-if __name__ == '__main__':
-    print(get())
-    
