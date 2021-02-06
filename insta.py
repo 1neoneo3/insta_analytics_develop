@@ -59,7 +59,7 @@ def get_account_info(params):
     url = params['endpoint_base'] + params['instagram_account_id']
     return call_api(url, endpoint_params)
 
-# 対象値と一番近いリストの要素とインデックス取得
+# 対象値と一番近いリストの要素のインデックス取得
 def get_nearest_value(list, num):
 
     idx = np.abs(np.asarray(list) - num).argmin()
