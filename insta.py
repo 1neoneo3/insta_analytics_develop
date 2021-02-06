@@ -65,71 +65,75 @@ def get_nearest_value(list, num):
     idx = np.abs(np.asarray(list) - num).argmin()
     return idx
 
-class BuzztagView(APIView):
-    def get(self, request):
-        params = get_credentials()
-        ig_username = request.GET.get(key="ig_username")
-        tagname = request.GET.get(key="tagname")
 
-        # 本番用
-        access_token = request.GET.get(key="access_token")
-        instagram_account_id = request.GET.get(key="instagram_account_id")
+def get():
+    params = get_credentials()
+    ig_username = request.GET.get(key="ig_username")
+    tagname = request.GET.get(key="tagname")
+
+    # 本番用
+    access_token = request.GET.get(key="access_token")
+    instagram_account_id = request.GET.get(key="instagram_account_id")
 
 
-        # ローカルで確認する場合は下記のコメントアウトを外す(.envが必要) 
-        # access_token = settings.ACCESS_TOKEN
-        # instagram_account_id = settings.USER_ID
+    # ローカルで確認する場合は下記のコメントアウトを外す(.envが必要) 
+    # access_token = settings.ACCESS_TOKEN
+    # instagram_account_id = settings.USER_ID
 
-        params['access_token'] = access_token
-        params['instagram_account_id'] = instagram_account_id
-        params['ig_username'] = ig_username
-        params['tagname'] = tagname
+    params['access_token'] = access_token
+    params['instagram_account_id'] = instagram_account_id
+    params['ig_username'] = ig_username
+    params['tagname'] = tagname
+    
+    params['hashtag_id'] = get_hashtag_id(params)['json_data']['data'][0]['id']
+    account_response = get_account_info(params)
+    
+    business_discovery = account_response['json_data']['business_discovery']
+    username = business_discovery['username']
+    biography = business_discovery['biography']
+    profile_picture_url = business_discovery['profile_picture_url']
+    follows_count = business_discovery['follows_count']
+    followers_count = business_discovery['followers_count']
+    media_count = business_discovery['media_count']
+    media_data = business_discovery['media']['data']
+
+    # 自分の投稿の平均エンゲージメント数を取得
+    ave_engage = 0
+    for i in range(len(media_data)):
+        if media_data[i].get('media_url'):
+            ave_engage += media_data[i]['like_count'] + media_data[i]['comments_count']
+    try:
+        ave_num = ave_engage / len(media_data)
+    except ZeroDivisionError:
+        ave_num = 0
+    
+    # トップメディアのエンゲージメント数のリストを作成
+    response = get_hashtag_media(params)
+    length = len(response['json_data']['data'])    
+    engage_list = [response['json_data']['data'][i]['comments_count'] + response['json_data']['data'][i]['like_count'] for i in range(length)]
+
+    # 自分の投稿の平均エンゲージメント数と一番近い値のタグリストを取得
+    for i in range(len(engage_list)):
+        idx = get_nearest_value(engage_list, ave_num)
+        caption = response['json_data']["data"][idx]["caption"]                
+        hash_tag_list = re.findall('#([^\s→#\ufeff]*)', caption)
+        if hash_tag_list:
+            break
+        else:
+            del engage_list[idx]
+            continue
         
-        params['hashtag_id'] = get_hashtag_id(params)['json_data']['data'][0]['id']
-        account_response = get_account_info(params)
-        
-        business_discovery = account_response['json_data']['business_discovery']
-        username = business_discovery['username']
-        biography = business_discovery['biography']
-        profile_picture_url = business_discovery['profile_picture_url']
-        follows_count = business_discovery['follows_count']
-        followers_count = business_discovery['followers_count']
-        media_count = business_discovery['media_count']
-        media_data = business_discovery['media']['data']
-
-        # 自分の投稿の平均エンゲージメント数を取得
-        ave_engage = 0
-        for i in range(media_count):
-            if media_data[i].get('media_url'):
-                ave_engage += media_data[i]['like_count'] + media_data[i]['comments_count']
-        ave_num = ave_engage / media_count
-        
-        # トップメディアのエンゲージメント数のリストを作成
-        response = get_hashtag_media(params)
-        length = len(response['json_data']['data'])    
-        engage_list = [response['json_data']['data'][i]['comments_count'] + response['json_data']['data'][i]['like_count'] for i in range(length)]
-
-        # 自分の投稿の平均エンゲージメント数と一番近い値のタグリストを取得
-        for i in range(len(engage_list)):
-            idx = get_nearest_value(engage_list, ave_num)
-            caption = response['json_data']["data"][idx]["caption"]                
-            hash_tag_list = re.findall('#([^\s→#\ufeff]*)', caption)
-            if hash_tag_list:
-                break
-            else:
-                del engage_list[idx]
-                continue
-            
-        like_count = response['json_data']["data"][idx]['like_count']
-        comments_count = response['json_data']["data"][idx]['comments_count']
-        
-        buzz_tag_data = {
-            'my_average_engagement': ave_num,
-            'nearest_engagement': engage_list[idx],
-            'caption': caption,
-            'like_count': like_count,
-            'comments_count': comments_count,
-            'hash_tag_list': hash_tag_list,
-        }
-        
-        return Response(buzz_tag_data)
+    like_count = response['json_data']["data"][idx]['like_count']
+    comments_count = response['json_data']["data"][idx]['comments_count']
+    
+    buzz_tag_data = {
+        'tagname': tagname,
+        'my_average_engagement': ave_num,
+        'nearest_engagement': engage_list[idx],
+        'caption': caption,
+        'like_count': like_count,
+        'comments_count': comments_count,
+        'hash_tag_list': hash_tag_list,
+    }
+    
+    return Response(buzz_tag_data)
