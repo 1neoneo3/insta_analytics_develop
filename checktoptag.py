@@ -23,7 +23,7 @@ def get_credentials():
     return credentials
 
 
-# Instagram Graph APIƒR[ƒ‹
+# Instagram Graph APIã‚³ãƒ¼ãƒ«
 def call_api(url, endpoint_params):
     data = requests.get(url, endpoint_params)
     response = {}
@@ -31,7 +31,7 @@ def call_api(url, endpoint_params):
     return response
 
 
-# ƒnƒbƒVƒ…ƒ^ƒOIDæ“¾
+# ãƒãƒƒã‚·ãƒ¥ã‚¿ã‚°IDå–å¾—
 def get_hashtag_id(params):
     endpoint_params = {}
     endpoint_params['user_id'] = params['instagram_account_id']
@@ -41,7 +41,7 @@ def get_hashtag_id(params):
     return call_api(url, endpoint_params)
 
 
-# ƒgƒbƒvƒƒfƒBƒAæ“¾
+# ãƒˆãƒƒãƒ—ãƒ¡ãƒ‡ã‚£ã‚¢å–å¾—
 def get_hashtag_media(params):
     endpoint_params = {}
     endpoint_params['user_id'] = params['instagram_account_id']
@@ -52,10 +52,10 @@ def get_hashtag_media(params):
     return call_api(url, endpoint_params)
 
 
-# ƒ†[ƒU[ƒAƒJƒEƒ“ƒgî•ñæ“¾
+# ãƒ¦ãƒ¼ã‚¶ãƒ¼ã‚¢ã‚«ã‚¦ãƒ³ãƒˆæƒ…å ±å–å¾—
 def get_account_info(params):
     endpoint_params = {}
-    # ƒ†[ƒU–¼AƒvƒƒtƒB[ƒ‹‰æ‘œAƒtƒHƒƒ[”AƒtƒHƒ[”A“Še”AƒƒfƒBƒAî•ñæ“¾
+    # ãƒ¦ãƒ¼ã‚¶åã€ãƒ—ãƒ­ãƒ•ã‚£ãƒ¼ãƒ«ç”»åƒã€ãƒ•ã‚©ãƒ­ãƒ¯ãƒ¼æ•°ã€ãƒ•ã‚©ãƒ­ãƒ¼æ•°ã€æŠ•ç¨¿æ•°ã€ãƒ¡ãƒ‡ã‚£ã‚¢æƒ…å ±å–å¾—
     endpoint_params['fields'] = 'business_discovery.username(' + params['ig_username'] + '){\
         username,biography,profile_picture_url,follows_count,followers_count,media_count,\
         media.limit(100){comments_count,like_count,caption,media_url,permalink,timestamp,media_type}}'
@@ -65,27 +65,27 @@ def get_account_info(params):
 
 class CheckToptagView(APIView):
     def get(self, request, tagname, access_token, instagram_account_id):
-        # Instagram Graph API”FØî•ñæ“¾
+        # Instagram Graph APIèªè¨¼æƒ…å ±å–å¾—
         params = get_credentials()
         ig_username = request.GET.get(key="ig_username")
         tagname = request.GET.get(key="tagname")
 
-        # –{”Ô—p
+        # æœ¬ç•ªç”¨
         access_token = request.GET.get(key="access_token")
         instagram_account_id = request.GET.get(key="instagram_account_id")
 
-        # ƒ[ƒJƒ‹‚ÅŠm”F‚·‚éê‡‚Í‰º‹L‚ÌƒRƒƒ“ƒgƒAƒEƒg‚ğŠO‚·(.env‚ª•K—v)
+        # ãƒ­ãƒ¼ã‚«ãƒ«ã§ç¢ºèªã™ã‚‹å ´åˆã¯ä¸‹è¨˜ã®ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆã‚’å¤–ã™(.envãŒå¿…è¦)
         # access_token = settings.ACCESS_TOKEN
         # instagram_account_id = settings.USER_ID
 
         params['access_token'] = access_token
         params['instagram_account_id'] = instagram_account_id
-        params['ig_username'] = "mamainstatorisetu"
-        # ƒnƒbƒVƒ…ƒ^ƒOİ’è
+        params['ig_username'] = ig_username
+        # ãƒãƒƒã‚·ãƒ¥ã‚¿ã‚°è¨­å®š
         params['tagname'] = tagname
-        # ƒnƒbƒVƒ…ƒ^ƒOIDæ“¾    
+        # ãƒãƒƒã‚·ãƒ¥ã‚¿ã‚°IDå–å¾—    
         hashtag_id_response = get_hashtag_id(params)
-        # ƒnƒbƒVƒ…ƒ^ƒOIDİ’è
+        # ãƒãƒƒã‚·ãƒ¥ã‚¿ã‚°IDè¨­å®š
         params['hashtag_id'] = hashtag_id_response['json_data']['data'][0]["id"]
 
         account_response = get_account_info(params)
@@ -98,16 +98,16 @@ class CheckToptagView(APIView):
         media_count = business_discovery['media_count']
         media_data = business_discovery['media']['data']
 
-        # ƒƒfƒBƒAIDƒŠƒXƒg‚Ìì¬
+        # ãƒ¡ãƒ‡ã‚£ã‚¢IDãƒªã‚¹ãƒˆã®ä½œæˆ
         media_list = [media_data[i]['id'] for i in range(len(media_data))]
 
         hashtag_media_response = get_hashtag_media(params)
         hashag_data = hashtag_media_response['json_data']["data"]
 
-        # ƒnƒbƒVƒ…ƒ^ƒOƒgƒbƒv‚ÌƒƒfƒBƒAIDƒŠƒXƒg‚Ìì¬
+        # ãƒãƒƒã‚·ãƒ¥ã‚¿ã‚°ãƒˆãƒƒãƒ—ã®ãƒ¡ãƒ‡ã‚£ã‚¢IDãƒªã‚¹ãƒˆã®ä½œæˆ
         toptag_list = [hashag_data[i]['id'] for i in range(len(hashag_data))]
 
-        # ƒƒfƒBƒAID‚Ì‘¶İŠm”F
+        # ãƒ¡ãƒ‡ã‚£ã‚¢IDã®å­˜åœ¨ç¢ºèª
         media_set = set(media_list)
         toptag_set = set(toptag_list)
         matched_list = list(media_set & toptag_set)
