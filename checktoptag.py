@@ -64,7 +64,7 @@ def get_account_info(params):
     return call_api(url, endpoint_params)
 
 class CheckToptagView(APIView):
-    def get(self, request, tagname, access_token, instagram_account_id):
+    def get(self, request):
         # Instagram Graph API認証情報取得
         params = get_credentials()
         ig_username = request.GET.get(key="ig_username")
